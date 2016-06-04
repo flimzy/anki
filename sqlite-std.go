@@ -8,18 +8,19 @@ import (
 	"io/ioutil"
 	"os"
 
-	"database/sql"
+	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type DB struct {
-	*sql.DB
+	*sqlx.DB
 	tmpFile string
 }
 
 func (db *DB) Close() (e error) {
 	if db.tmpFile != "" {
 		if err := os.Remove(db.tmpFile); err != nil {
+			fmt.Printf("Cannot remove file: %s", err)
 			e = err
 		}
 	}
@@ -32,13 +33,13 @@ func (db *DB) Close() (e error) {
 }
 
 func OpenDB(src io.Reader) (db *DB, e error) {
-	fmt.Printf("10")
+	db = &DB{}
 	dbFile, err := dumpToTemp(src)
 	db.tmpFile = dbFile
 	if err != nil {
 		return db, err
 	}
-	sqldb, err := sql.Open("sqlite3", dbFile)
+	sqldb, err := sqlx.Connect("sqlite3", dbFile)
 	if err != nil {
 		return db, err
 	}

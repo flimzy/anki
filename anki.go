@@ -5,15 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-
-	"database/sql"
 )
 
 type Apkg struct {
 	reader *zip.Reader
 	closer *zip.ReadCloser
 	index  map[string]*zip.File
-	db     *sql.DB
+	db     *DB
 }
 
 func ReadFile(f string) (*Apkg, error) {
@@ -77,6 +75,11 @@ func (a *Apkg) Collection() (*Collection, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("db = %v\n", db)
-	return nil, nil
+	a.db = db
+	collection := &Collection{}
+	if err := db.Get(collection, "SELECT * FROM col"); err != nil {
+		return nil, err
+	}
+	fmt.Printf("%v\n", collection)
+	return collection, nil
 }

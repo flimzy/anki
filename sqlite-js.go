@@ -5,21 +5,19 @@ package anki
 import (
 	"io"
 
-	"database/sql"
 	"github.com/flimzy/go-sql.js"
+	"github.com/jmoiron/sqlx"
 )
 
 type DB struct {
-	*sql.DB
+	*sqlx.DB
 }
 
-var sqliteReader io.Reader
-
-func init() {
-	sql.Register("anki-reader", &sqljs.SQLJSDriver{Reader: sqliteReader})
-}
-
-func OpenDB(dbFile io.Reader) (*sql.DB, error) {
-	sqliteReader = dbFile
-	return sql.Open("anki-reader", "")
+func OpenDB(dbFile io.Reader) (*DB, error) {
+	sqljs.AddReader("collection.anki2", dbFile)
+	db, err := sqlx.Connect("sqljs", "collection.anki2")
+	if err != nil {
+		return nil, err
+	}
+	return &DB{db}, nil
 }

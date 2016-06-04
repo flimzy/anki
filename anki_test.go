@@ -24,7 +24,7 @@ func TestReadFile(t *testing.T) {
 func TestReadReader(t *testing.T) {
 	file, err := os.Open(ApkgFile)
 	if err != nil {
-		t.Fatalf("Error opening teest file: %s", err)
+		t.Fatalf("Error opening test file: %s", err)
 	}
 	fi, err := file.Stat()
 	if err != nil {
@@ -36,5 +36,14 @@ func TestReadReader(t *testing.T) {
 	}
 	if err := apkg.Close(); err != nil {
 		t.Fatalf("Error closing apkg from Reader: %s", err)
+	}
+
+	_, err = apkg.Collection()
+	if err != nil {
+		t.Fatalf("Error getting collection: %s", err)
+	}
+
+	if err := apkg.Close(); err != nil {
+		t.Fatalf("Error closing Apkg: %v", err)
 	}
 }

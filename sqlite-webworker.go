@@ -3,6 +3,7 @@
 package anki
 
 import (
+	"database/sql"
 	"io"
 )
 
