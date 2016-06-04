@@ -1,0 +1,13 @@
+{
+    "name": "anki",
+    "version": "0.0.1",
+    "description": "Go library to read Anki *.apkg files",
+    "author": "Jonathan Hall <flimzy@flimzy.com",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/flimzy/anki"
+    },
+    "dependencies": {
+        "sql.js": "*"
+    }
+}
