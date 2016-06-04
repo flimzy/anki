@@ -36,17 +36,17 @@ func (t *TimestampMilliseconds) Scan(src interface{}) error {
 }
 
 type Collection struct {
-	ID             int                    `db:"id"`
-	Created        *TimestampSeconds      `db:"crt"`
-	Modified       *TimestampMilliseconds `db:"mod"`
-	SchemaModified *TimestampMilliseconds `db:"scm"`
-	Ver            int                    `db:"ver"`
-	UpdateSequence int                    `db:"usn"`
-	LastSync       *TimestampMilliseconds `db:"ls"`
-	Config         string                 `db:"conf"`
-	Models         string                 `db:"models"`
-	Decks          string                 `db:"decks"`
-	DeckConfig     string                 `db:"dconf"`
-	Tags           string                 `db:"tags"`
-	Dty            int                    `db:"dty"` // Unused
+	ID             int                    `db:"id"`     // Primary key; should always be 1, as there's only ever one collection per *.apkg file
+	Created        *TimestampSeconds      `db:"crt"`    // Created timestamp (seconds)
+	Modified       *TimestampMilliseconds `db:"mod"`    // Last modified timestamp (milliseconds)
+	SchemaModified *TimestampMilliseconds `db:"scm"`    // Schema modification time (milliseconds)
+	Version        int                    `db:"ver"`    // Version?
+	Dirty          int                    `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
+	UpdateSequence int                    `db:"usn"`    // update sequence number. used to figure out diffs when syncing
+	LastSync       *TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
+	Config         string                 `db:"conf"`   // JSON blob containing configuration options
+	Models         string                 `db:"models"` // JSON array of json objects containing the models (aka Note types)
+	Decks          string                 `db:"decks"`  // JSON array of json objects containing decks
+	DeckConfig     string                 `db:"dconf"`  // JSON blob containing deck configuration options
+	Tags           string                 `db:"tags"`   // a cache of tags used in the collection
 }
