@@ -16,8 +16,8 @@ type Collection struct {
 	LastSync       TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
 	Config         Config                `db:"conf"`   // JSON blob containing configuration options
 	Models         Models                `db:"models"` // JSON array of json objects containing the models (aka Note types)
-	Decks          string                `db:"decks"`  // JSON array of json objects containing decks
-	DeckConfig     string                `db:"dconf"`  // JSON blob containing deck configuration options
+	Decks          Decks                 `db:"decks"`  // JSON array of json objects containing decks
+	DeckConfig     DeckConfigs           `db:"dconf"`  // JSON blob containing deck configuration options
 	Tags           string                `db:"tags"`   // a cache of tags used in the collection
 }
 
@@ -65,11 +65,11 @@ func (m *Models) UnmarshalJSON(src []byte) error {
 	if err := json.Unmarshal(src, &tmp); err != nil {
 		return err
 	}
-	newM := make(map[ID]Model)
+	newMap := make(map[ID]Model)
 	for _, v := range tmp {
-		newM[v.ID] = v
+		newMap[v.ID] = v
 	}
-	*m = Models(newM)
+	*m = Models(newMap)
 	return nil
 }
 
@@ -106,8 +106,8 @@ const (
 type Field struct {
 	Name     string `json:"name"`   // Field name
 	Sticky   bool   `json:"sticky"` // Sticky fields retain the value that was last added when adding new notes
-	RTL      bool   `json:"rtl"`    // Boolean to indicate if this field uses Right-to-Left script
-	Ord      int    `json:"ord"`    // Ordinal of the field. Goes from 0 to num fields -1.
+	RTL      bool   `json:"rtl"`    // boolean to indicate if this field uses Right-to-Left script
+	Ordinal  int    `json:"ord"`    // Ordinal of the field. Goes from 0 to num fields -1.
 	Font     string `json:"font"`   // Display font
 	FontSize int    `json:"size"`   // Font size
 }
@@ -141,5 +141,111 @@ type Template struct {
 	BrowserQuestionFormat string `json:"bqfmt"` // Browser question format
 	BrowserAnswerFormat   string `json:"bafmt"` // Browser answer format
 	DeckOverride          ID     `json:"did"`   // Deck override (null by default) (??)
-
 }
+
+type Decks map[ID]Deck
+
+func (d *Decks) Scan(src interface{}) error {
+	return scanJSON(src, d)
+}
+
+func (d *Decks) UnmarshalJSON(src []byte) error {
+	tmp := make(map[string]Deck)
+	if err := json.Unmarshal(src, &tmp); err != nil {
+		return err
+	}
+	newMap := make(map[ID]Deck)
+	for _, v := range tmp {
+		newMap[v.ID] = v
+	}
+	*d = Decks(newMap)
+	return nil
+}
+
+type Deck struct {
+	ID                      ID               `json:"id"`               // Deck ID
+	Name                    string           `json:"name"`             // Deck name
+	Description             string           `json:"desc"`             // Deck description
+	Modified                TimestampSeconds `json:"mod"`              // Last modification time in seconds
+	UpdateSequence          int              `json:"usn"`              // Update sequence number. Used in the same way as the other USN values
+	Collapsed               bool             `json:"collapsed"`        // True when the deck is collapsed
+	BrowserCollapsed        bool             `json:"browserCollapsed"` // True when the deck is collapsed in the browser
+	ExtendedNewCardLimit    int              `json:"extendedNew"`      // Extended new card limit for custom study
+	ExtendedReviewCardLimit int              `json:"extendedRev"`      // Extended review card limit for custom study
+	Dynamic                 BoolInt          `json:"dyn"`              // True for a dynamic (aka filtered) deck
+	ConfID                  int              `json:"conf"`             // ID of option group from dconf in `col` table
+	NewToday                [2]int           `json:"newToday"`         // two number array used somehow for custom study
+	ReviewsToday            [2]int           `json:"revToday"`         // two number array used somehow for custom study
+	LearnToday              [2]int           `json:"lrnToday"`         // two number array used somehow for custom study
+	TimeToday               [2]int           `json:"timeToday"`        // two number array used somehow for custom study (in ms)
+}
+
+type DeckConfigs map[ID]DeckConfig
+
+func (dc *DeckConfigs) Scan(src interface{}) error {
+	return scanJSON(src, dc)
+}
+
+func (dc *DeckConfigs) UnmarshalJSON(src []byte) error {
+	tmp := make(map[string]DeckConfig)
+	if err := json.Unmarshal(src, &tmp); err != nil {
+		return err
+	}
+	newMap := make(map[ID]DeckConfig)
+	for _, v := range tmp {
+		newMap[v.ID] = v
+	}
+	*dc = DeckConfigs(newMap)
+	return nil
+}
+
+// DeckConfig
+//
+// Excluded from this definition is the `minSpace` field from Reviews, as it is no longer used.
+type DeckConfig struct {
+	ID               ID               `json:"id"`       // Deck ID
+	Name             string           `json:"name"`     // Deck Name
+	ReplayAudio      bool             `json:"replayq"`  // When answer shown, replay both question and answer audio
+	ShowTimer        BoolInt          `json:"timer"`    // Show answer timer
+	MaxAnswerSeconds int              `json:"maxTaken"` // Ignore answers that take longer than this many seconds
+	Modified         TimestampSeconds `json:"mod"`      // Modified timestamp
+	AutoPlay         bool             `json:"autoplay"` // Automatically play audio
+	Lapses           struct {
+		LeechFails      int               `json:"leechFails"`  // Leech threshold
+		MinimumInterval DurationDays      `json:"minInt"`      // Minimum interval in days
+		LeechAction     LeechAction       `json:"leechAction"` // Leech action: Suspend or Tag Only
+		Delays          []DurationMinutes `json:"delays"`      // Steps in minutes
+		NewInterval     float32           `json:"mult"`        // New Interval Multiplier
+	} `json:"lapse"`
+	Reviews struct {
+		PerDay           int          `json:"perDay"` // Maximum reviews per day
+		Fuzz             float32      `json:"fuzz"`   // Apparently not used?
+		IntervalModifier float32      `json:"ivlFct"` // Interval modifier (fraction)
+		MaxInterval      DurationDays `json:"maxIvl"` // Maximum interval in days
+		EasyBonus        float32      `json:ease4"`   // Easy bonus
+		Bury             bool         `json:"bury"`   // Bury related reviews until next day
+	} `json:"rev"`
+	New struct {
+		PerDay        int               `json:"perDay"`        // Maximum new cards per day
+		Delays        []DurationMinutes `json:"delays"`        // Steps in minutes
+		Bury          bool              `json:"bury"`          // Bury related cards until the next day
+		Separate      bool              `json:"separate"`      // Unused??
+		Intervals     [3]DurationDays   `json:"ints"`          // Intervals??
+		InitialFactor float32           `json:"initialFactor"` // Starting Ease
+		Order         NewCardOrder      `json:"order"`         // New card order: Random, or order added
+	} `json:"new"`
+}
+
+type LeechAction int
+
+const (
+	LeechActionSuspendCard LeechAction = iota
+	LeechActoinTagOnly
+)
+
+type NewCardOrder int
+
+const (
+	NewCardOrderOrderAdded NewCardOrder = iota
+	NewCardOrderRandomOrder
+)
