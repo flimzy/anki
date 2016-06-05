@@ -2,7 +2,9 @@ package anki
 
 import (
 	"os"
+	// 	"fmt"
 	"testing"
+	// 	"github.com/davecgh/go-spew/spew"
 )
 
 const ApkgFile = "t/Test.apkg"
@@ -38,9 +40,12 @@ func TestReadReader(t *testing.T) {
 		t.Fatalf("Error closing apkg from Reader: %s", err)
 	}
 
-	_, err = apkg.Collection()
+	collection, err := apkg.Collection()
 	if err != nil {
 		t.Fatalf("Error getting collection: %s", err)
+	}
+	if collection.Config.CollapseTime != 1200 {
+		t.Fatalf("Spot-check failed")
 	}
 
 	if err := apkg.Close(); err != nil {

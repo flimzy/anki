@@ -1,52 +1,99 @@
 package anki
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 )
 
-type TimestampSeconds time.Time
-type TimestampMilliseconds time.Time
+type ID int64
 
-func (t *TimestampSeconds) Scan(src interface{}) error {
+func (i *ID) Scan(src interface{}) error {
+	var id int64
 	switch x := src.(type) {
 	case float64:
-		*t = TimestampSeconds(time.Unix(int64(src.(float64)), 0))
+		id = int64(src.(float64))
 	case int64:
-		*t = TimestampSeconds(time.Unix(src.(int64), 0))
+		id = src.(int64)
+	case string:
+		var err error
+		id, err = strconv.ParseInt(src.(string), 10, 64)
+		if err != nil {
+			return err
+		}
+	case nil:
+		return nil
+	default:
+		return fmt.Errorf("Incompatible type for ID: %s", x)
+	}
+	*i = ID(id)
+	return nil
+}
+
+func (i *ID) UnmarshalJSON(src []byte) error {
+	var id interface{}
+	if err := json.Unmarshal(src, &id); err != nil {
+		return err
+	}
+	return i.Scan(id)
+}
+
+type TimestampSeconds time.Time
+type TimestampMilliseconds time.Time
+type DurationSeconds time.Duration
+
+func (t *TimestampSeconds) Scan(src interface{}) error {
+	var seconds int64
+	switch x := src.(type) {
+	case float64:
+		seconds = int64(src.(float64))
+	case int64:
+		seconds = src.(int64)
+	case nil:
+		return nil
 	default:
 		return fmt.Errorf("Incompatible type for TimestampSeconds: %s", x)
 	}
+	*t = TimestampSeconds(time.Unix(seconds, 0))
 	return nil
+}
+
+func (t *TimestampSeconds) UnmarshalJSON(src []byte) error {
+	var ts interface{}
+	if err := json.Unmarshal(src, &ts); err != nil {
+		return err
+	}
+	return t.Scan(ts)
 }
 
 func (t *TimestampMilliseconds) Scan(src interface{}) error {
+	var ms int64
 	switch src.(type) {
 	case float64:
-		ms := src.(float64)
-		*t = TimestampMilliseconds(time.Unix(int64(ms/1000), int64(ms)%1000))
+		ms = int64(src.(float64))
 	case int64:
-		ms := src.(int64)
-		*t = TimestampMilliseconds(time.Unix(ms/1000, ms%1000))
+		ms = src.(int64)
+	case nil:
+		return nil
 	default:
 		return errors.New("Incompatible type for TimestampMillieconds")
 	}
+	*t = TimestampMilliseconds(time.Unix(ms/1000, ms%1000))
 	return nil
 }
 
-type Collection struct {
-	ID             int                    `db:"id"`     // Primary key; should always be 1, as there's only ever one collection per *.apkg file
-	Created        *TimestampSeconds      `db:"crt"`    // Created timestamp (seconds)
-	Modified       *TimestampMilliseconds `db:"mod"`    // Last modified timestamp (milliseconds)
-	SchemaModified *TimestampMilliseconds `db:"scm"`    // Schema modification time (milliseconds)
-	Version        int                    `db:"ver"`    // Version?
-	Dirty          int                    `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
-	UpdateSequence int                    `db:"usn"`    // update sequence number. used to figure out diffs when syncing
-	LastSync       *TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
-	Config         string                 `db:"conf"`   // JSON blob containing configuration options
-	Models         string                 `db:"models"` // JSON array of json objects containing the models (aka Note types)
-	Decks          string                 `db:"decks"`  // JSON array of json objects containing decks
-	DeckConfig     string                 `db:"dconf"`  // JSON blob containing deck configuration options
-	Tags           string                 `db:"tags"`   // a cache of tags used in the collection
+func (d *DurationSeconds) Scan(src interface{}) error {
+	var seconds int64
+	switch src.(type) {
+	case float64:
+		seconds = int64(src.(float64))
+	case int64:
+		seconds = src.(int64)
+	default:
+		return errors.New("Incompatible type for DurationSeconds")
+	}
+	*d = DurationSeconds(time.Duration(seconds) * time.Second)
+	return nil
 }

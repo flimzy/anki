@@ -3,7 +3,6 @@ package anki
 import (
 	"archive/zip"
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -80,6 +79,5 @@ func (a *Apkg) Collection() (*Collection, error) {
 	if err := db.Get(collection, "SELECT * FROM col"); err != nil {
 		return nil, err
 	}
-	fmt.Printf("%v\n", collection)
 	return collection, nil
 }
