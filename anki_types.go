@@ -5,13 +5,14 @@ import (
 	"errors"
 )
 
+// Collection is an Anki Collection, stored in the `col` table.
 type Collection struct {
 	ID             ID                    `db:"id"`     // Primary key; should always be 1, as there's only ever one collection per *.apkg file
 	Created        TimestampSeconds      `db:"crt"`    // Created timestamp (seconds)
 	Modified       TimestampMilliseconds `db:"mod"`    // Last modified timestamp (milliseconds)
 	SchemaModified TimestampMilliseconds `db:"scm"`    // Schema modification time (milliseconds)
 	Version        int                   `db:"ver"`    // Version?
-	Dirty          int                   `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
+	Dirty          BoolInt               `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
 	UpdateSequence int                   `db:"usn"`    // update sequence number. used to figure out diffs when syncing
 	LastSync       TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
 	Config         Config                `db:"conf"`   // JSON blob containing configuration options
@@ -21,6 +22,7 @@ type Collection struct {
 	Tags           string                `db:"tags"`   // a cache of tags used in the collection
 }
 
+// Config represents basic global configuration for the Anki client.
 type Config struct {
 	NextPos       int             `json:"nextPos"`
 	EstimateTimes bool            `json:"estTimes"`
@@ -50,16 +52,21 @@ func scanJSON(src interface{}, target interface{}) error {
 	return json.Unmarshal(blob, target)
 }
 
+// Scan implements the sql.Scanner interface for the Config type.
 func (c *Config) Scan(src interface{}) error {
 	return scanJSON(src, c)
 }
 
+// A collection of Models (aka note types), stored as JSON in the `models`
+// column of the `col` table.
 type Models map[ID]Model
 
+// Scan implements the sql.Scanner interface for the Models type.
 func (m *Models) Scan(src interface{}) error {
 	return scanJSON(src, m)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the Models type.
 func (m *Models) UnmarshalJSON(src []byte) error {
 	tmp := make(map[string]Model)
 	if err := json.Unmarshal(src, &tmp); err != nil {
@@ -73,7 +80,7 @@ func (m *Models) UnmarshalJSON(src []byte) error {
 	return nil
 }
 
-// Model aka Note Type
+// Model (aka Note Type)
 //
 // Excluded from this definition is the `vers` field, which is no longer used by Anki.
 type Model struct {
@@ -93,6 +100,7 @@ type Model struct {
 	UpdateSequence int              `json:"usn"`       // Update sequence number: used in same way as other usn vales in db
 }
 
+// Enum representing the available Note Type Types (confusing, eh?)
 type ModelType int
 
 const (
@@ -100,7 +108,7 @@ const (
 	ModelTypeCloze
 )
 
-// Field
+// A field of a model
 //
 // Excluded from this definition is the `media` field, which appears to no longer be used.
 type Field struct {
@@ -112,12 +120,17 @@ type Field struct {
 	FontSize int    `json:"size"`   // Font size
 }
 
+// A card constraint defines which fields are necessary for a particular card
+// type to be generated. This is (apparently) auto-calculated whenever a note
+// is created or modified.
 type CardConstraint struct {
 	Index     int    // Card index
 	MatchType string // "any" or "all"
 	Fields    []int  // Array of fields which must exist
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the
+// CardConstraint type
 func (c *CardConstraint) UnmarshalJSON(src []byte) error {
 	tmp := make([]interface{}, 3)
 	if err := json.Unmarshal(src, &tmp); err != nil {
@@ -133,6 +146,8 @@ func (c *CardConstraint) UnmarshalJSON(src []byte) error {
 	return nil
 }
 
+// A Template definition. A template definition represents a single card type,
+// and is stored as part of a Model.
 type Template struct {
 	Name                  string `json:"name"`  // Template name
 	Ordinal               int    `json:"ord"`   // Template number
@@ -143,12 +158,15 @@ type Template struct {
 	DeckOverride          ID     `json:"did"`   // Deck override (null by default) (??)
 }
 
+// A collection of Decks
 type Decks map[ID]Deck
 
+// Scan implements the sql.Scanner interface for the Decks type.
 func (d *Decks) Scan(src interface{}) error {
 	return scanJSON(src, d)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the Decks type.
 func (d *Decks) UnmarshalJSON(src []byte) error {
 	tmp := make(map[string]Deck)
 	if err := json.Unmarshal(src, &tmp); err != nil {
@@ -162,6 +180,7 @@ func (d *Decks) UnmarshalJSON(src []byte) error {
 	return nil
 }
 
+// A Deck definition
 type Deck struct {
 	ID                      ID               `json:"id"`               // Deck ID
 	Name                    string           `json:"name"`             // Deck name
@@ -180,12 +199,16 @@ type Deck struct {
 	TimeToday               [2]int           `json:"timeToday"`        // two number array used somehow for custom study (in ms)
 }
 
+// Collection of per-deck configurations
 type DeckConfigs map[ID]DeckConfig
 
+// Scan implements the sql.Scanner interface for the DeckConfigs type.
 func (dc *DeckConfigs) Scan(src interface{}) error {
 	return scanJSON(src, dc)
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the DeckConfigs
+// type.
 func (dc *DeckConfigs) UnmarshalJSON(src []byte) error {
 	tmp := make(map[string]DeckConfig)
 	if err := json.Unmarshal(src, &tmp); err != nil {
@@ -199,7 +222,7 @@ func (dc *DeckConfigs) UnmarshalJSON(src []byte) error {
 	return nil
 }
 
-// DeckConfig
+// Per-Deck configuration options.
 //
 // Excluded from this definition is the `minSpace` field from Reviews, as it is no longer used.
 type DeckConfig struct {
@@ -236,6 +259,7 @@ type DeckConfig struct {
 	} `json:"new"`
 }
 
+// Enum of available leech actions
 type LeechAction int
 
 const (
@@ -243,6 +267,7 @@ const (
 	LeechActoinTagOnly
 )
 
+// Enum of new card order options
 type NewCardOrder int
 
 const (

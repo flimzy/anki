@@ -8,8 +8,10 @@ import (
 	"time"
 )
 
+// ID represents an Anki object ID (deck, card, note, etc) as an int64.
 type ID int64
 
+// Scan implements the sql.Scanner interface for the ID type.
 func (i *ID) Scan(src interface{}) error {
 	var id int64
 	switch x := src.(type) {
@@ -32,6 +34,7 @@ func (i *ID) Scan(src interface{}) error {
 	return nil
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the ID type.
 func (i *ID) UnmarshalJSON(src []byte) error {
 	var id interface{}
 	if err := json.Unmarshal(src, &id); err != nil {
@@ -40,9 +43,13 @@ func (i *ID) UnmarshalJSON(src []byte) error {
 	return i.Scan(id)
 }
 
+// TimestampSeconds represents a time.Time value stored as seconds.
 type TimestampSeconds time.Time
+
+// TimestampMilliseconds represents a time.Time value stored as milliseconds.
 type TimestampMilliseconds time.Time
 
+// Scan implements the sql.Scanner interface for the TimestampSeconds type.
 func (t *TimestampSeconds) Scan(src interface{}) error {
 	var seconds int64
 	switch x := src.(type) {
@@ -59,6 +66,8 @@ func (t *TimestampSeconds) Scan(src interface{}) error {
 	return nil
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the
+// TimestampSeconds type.
 func (t *TimestampSeconds) UnmarshalJSON(src []byte) error {
 	var ts interface{}
 	if err := json.Unmarshal(src, &ts); err != nil {
@@ -67,6 +76,8 @@ func (t *TimestampSeconds) UnmarshalJSON(src []byte) error {
 	return t.Scan(ts)
 }
 
+// Scan implements the sql.Scanner interface for the TimestampMilliseconds
+// type.
 func (t *TimestampMilliseconds) Scan(src interface{}) error {
 	var ms int64
 	switch src.(type) {
@@ -96,22 +107,27 @@ func scanInt64(src interface{}) (int64, error) {
 	return num, nil
 }
 
+// DurationSeconds represents a time.Duration value stored as seconds.
 type DurationSeconds time.Duration
 
+// Scan implements the sql.Scanner interface for the DurationSeconds type.
 func (d *DurationSeconds) Scan(src interface{}) error {
 	seconds, err := scanInt64(src)
 	*d = DurationSeconds(time.Duration(seconds) * time.Second)
 	return err
 }
 
+// DurationMinutes represents a time.Duration value stored as minutes.
 type DurationMinutes time.Duration
 
+// Scan implements the sql.Scanner interface for the DurationMinutes type.
 func (d *DurationMinutes) Scan(src interface{}) error {
 	min, err := scanInt64(src)
 	*d = DurationMinutes(time.Duration(min) * time.Minute)
 	return err
 }
 
+// DurationDays represents a duration in days.
 type DurationDays int
 
 func (d *DurationDays) Scan(src interface{}) error {
@@ -120,8 +136,10 @@ func (d *DurationDays) Scan(src interface{}) error {
 	return err
 }
 
+// BoolInt represents a boolean value stored as an int
 type BoolInt bool
 
+// Scan implements the sql.Scanner interface for the BoolInt type.
 func (b *BoolInt) Scan(src interface{}) error {
 	var tf bool
 	switch src.(type) {
@@ -141,6 +159,8 @@ func (b *BoolInt) Scan(src interface{}) error {
 	return nil
 }
 
+// UnmarshalJSON implements the json.Unmarshaler interface for the BoolInt
+// type.
 func (b *BoolInt) UnmarshalJSON(src []byte) error {
 	var tmp interface{}
 	if err := json.Unmarshal(src, &tmp); err != nil {
