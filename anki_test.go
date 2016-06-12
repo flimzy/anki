@@ -2,8 +2,6 @@ package anki
 
 import (
 	"os"
-	// 	"fmt"
-	"github.com/davecgh/go-spew/spew"
 	"testing"
 )
 
@@ -36,9 +34,6 @@ func TestReadReader(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Error opening apkg from Reader: %s", err)
 	}
-	if err := apkg.Close(); err != nil {
-		t.Fatalf("Error closing apkg from Reader: %s", err)
-	}
 
 	collection, err := apkg.Collection()
 	if err != nil {
@@ -47,9 +42,45 @@ func TestReadReader(t *testing.T) {
 	if collection.Config.CollapseTime != 1200 {
 		t.Fatalf("Spot-check failed")
 	}
-	spew.Dump(collection.DeckConfig)
+
+	notes, err := apkg.Notes()
+	if err != nil {
+		t.Fatalf("Error fetching notes: %s", err)
+	}
+	for notes.Next() {
+		note, err := notes.Note()
+		if err != nil {
+			t.Fatalf("Error reading note: %s", err)
+		}
+		if note.ID != 1388721680877 {
+			t.Fatalf("note spot-check failed. Expected ID 1388721680877, got %d", note.ID)
+		}
+		if note.Checksum != 1090091728 {
+			t.Fatalf("note spot-check failed. Expected checksum 1090091728, got %d", note.Checksum)
+		}
+	}
+	if err := notes.Close(); err != nil {
+		t.Fatalf("Error closing Notes: %s", err)
+	}
+
+	cards, err := apkg.Cards()
+	if err != nil {
+		t.Fatalf("Error fetching cards: %s", err)
+	}
+	for cards.Next() {
+		card, err := cards.Card()
+		if err != nil {
+			t.Fatalf("Error reading card: %s", err)
+		}
+		if card.ID != 1388721683902 {
+			t.Fatalf("card spot-check failed. Expected ID 1388721683902, got %d", card.ID)
+		}
+	}
+	if err := cards.Close(); err != nil {
+		t.Fatalf("Error closing Cards: %s", err)
+	}
 
 	if err := apkg.Close(); err != nil {
-		t.Fatalf("Error closing Apkg: %v", err)
+		t.Fatalf("Error closing apkg from Reader: %s", err)
 	}
 }

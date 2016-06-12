@@ -3,7 +3,10 @@ package anki
 import (
 	"archive/zip"
 	"errors"
+	"fmt"
+	"github.com/jmoiron/sqlx"
 	"io"
+	// 	"github.com/davecgh/go-spew/spew"
 )
 
 type Apkg struct {
@@ -45,7 +48,10 @@ func (a *Apkg) populateIndex() {
 	}
 }
 
-// Close closes any opened resources (io.Reader, SQLite handles, etc)
+// Close closes any opened resources (io.Reader, SQLite handles, etc). Any
+// subsequent calls to extant objects (Collection, Decks, Notes, etc) which
+// depend on these resources may fail. Only call this method after you're
+// completely done reading the Apkg file.
 func (a *Apkg) Close() (e error) {
 	if a.db != nil {
 		if err := a.db.Close(); err != nil {
@@ -79,5 +85,78 @@ func (a *Apkg) Collection() (*Collection, error) {
 	if err := db.Get(collection, "SELECT * FROM col"); err != nil {
 		return nil, err
 	}
+	for _, deck := range collection.Decks {
+		conf, ok := collection.DeckConfigs[deck.ConfigID]
+		if !ok {
+			return nil, fmt.Errorf("Deck %d references non-existent config %d", deck.ID, deck.ConfigID)
+		}
+		deck.Config = conf
+	}
 	return collection, nil
+}
+
+// Notes is a wrapper around sqlx.Rows, which means that any standard sqlx.Rows
+// or sql.Rows methods may be called on it. Generally, you should only ever
+// need to call Next() and Close(), in addition to Note() which is defined in
+// this package.
+type Notes struct {
+	*sqlx.Rows
+}
+
+// Notes returns a Notes struct representing all of the Note rows in the *.apkg
+// package file.
+func (a *Apkg) Notes() (*Notes, error) {
+	rows, err := a.db.Queryx(`
+		SELECT id, guid, mid, mod, usn, tags, flds, sfld,
+			CAST( csum AS text) AS csum -- Work-around for SQL.js trying to treat this as a float
+		FROM notes
+		ORDER BY id
+	`)
+	return &Notes{rows}, err
+}
+
+// Note is a simple wrapper around sqlx's StructScan(), which returns a Note
+// struct populated from the database.
+func (n *Notes) Note() (*Note, error) {
+	note := &Note{}
+	err := n.StructScan(note)
+	return note, err
+}
+
+// Cards is a wrapper around sqlx.Rows, which means that any standard sqlx.Rows
+// or sql.Rows methods may be called on it. Generally, you should only ever
+// need to call Next() and Close(), in addition to Card() which is defined in
+// this package.
+type Cards struct {
+	*sqlx.Rows
+}
+
+func (a *Apkg) Cards() (*Cards, error) {
+	rows, err := a.db.Queryx(`
+		SELECT id, nid, did, ord, mod, usn, type, queue, reps, lapses, left, odid,
+			CAST(factor AS real)/1000 AS factor,
+			CASE type
+				WHEN 1 THEN 0
+				WHEN 2 THEN due*24*60*60*(SELECT crt FROM col)
+				ELSE due
+			END AS due,
+			CASE
+				WHEN ivl < 0 THEN -ivl
+				ELSE ivl*24*60*60
+			END AS ivl,
+			CASE type
+				WHEN 1 THEN 0
+				WHEN 2 THEN odue*24*60*60*(SELECT crt FROM col)
+				ELSE odue
+			END AS odue
+		FROM cards
+		ORDER BY id
+	`)
+	return &Cards{rows}, err
+}
+
+func (c *Cards) Card() (*Card, error) {
+	card := &Card{}
+	err := c.StructScan(card)
+	return card, err
 }
