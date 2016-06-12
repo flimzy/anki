@@ -81,11 +81,29 @@ func (a *Apkg) Collection() (*Collection, error) {
 		return nil, err
 	}
 	a.db = db
+	var deletedDecks []ID
+	if rows, err := db.Query("SELECT oid FROM graves WHERE type=2"); err != nil {
+		return nil, err
+	} else {
+		for rows.Next() {
+			var id *ID
+			if err := rows.Scan(id); err != nil {
+				return nil, err
+			}
+			deletedDecks = append(deletedDecks, *id)
+		}
+	}
 	collection := &Collection{}
 	if err := db.Get(collection, "SELECT * FROM col"); err != nil {
 		return nil, err
 	}
 	for _, deck := range collection.Decks {
+		for _, deleted := range deletedDecks {
+			if deck.ID == deleted {
+				delete(collection.Decks, deck.ID)
+				continue
+			}
+		}
 		conf, ok := collection.DeckConfigs[deck.ConfigID]
 		if !ok {
 			return nil, fmt.Errorf("Deck %d references non-existent config %d", deck.ID, deck.ConfigID)
@@ -107,9 +125,10 @@ type Notes struct {
 // package file.
 func (a *Apkg) Notes() (*Notes, error) {
 	rows, err := a.db.Queryx(`
-		SELECT id, guid, mid, mod, usn, tags, flds, sfld,
-			CAST( csum AS text) AS csum -- Work-around for SQL.js trying to treat this as a float
-		FROM notes
+		SELECT n.id, n.guid, n.mid, n.mod, n.usn, n.tags, n.flds, n.sfld,
+			CAST(n.csum AS text) AS csum -- Work-around for SQL.js trying to treat this as a float
+		FROM notes n
+		LEFT JOIN graves g ON g.oid=n.id AND g.type=1
 		ORDER BY id
 	`)
 	return &Notes{rows}, err
@@ -131,25 +150,29 @@ type Cards struct {
 	*sqlx.Rows
 }
 
+// Cards returns a Cards struct represeting all of the non-deleted cards in the
+// *.apkg package file.
 func (a *Apkg) Cards() (*Cards, error) {
 	rows, err := a.db.Queryx(`
-		SELECT id, nid, did, ord, mod, usn, type, queue, reps, lapses, left, odid,
-			CAST(factor AS real)/1000 AS factor,
-			CASE type
+		SELECT c.id, c.nid, c.did, c.ord, c.mod, c.usn, c.type, c.queue, c.reps, c.lapses, c.left, c.odid,
+			CAST(c.factor AS real)/1000 AS factor,
+			CASE c.type
 				WHEN 1 THEN 0
-				WHEN 2 THEN due*24*60*60*(SELECT crt FROM col)
-				ELSE due
+				WHEN 2 THEN c.due*24*60*60*(SELECT crt FROM col)
+				ELSE c.due
 			END AS due,
 			CASE
-				WHEN ivl < 0 THEN -ivl
-				ELSE ivl*24*60*60
+				WHEN c.ivl < 0 THEN -ivl
+				ELSE c.ivl*24*60*60
 			END AS ivl,
-			CASE type
+			CASE c.type
 				WHEN 1 THEN 0
-				WHEN 2 THEN odue*24*60*60*(SELECT crt FROM col)
-				ELSE odue
+				WHEN 2 THEN c.odue*24*60*60*(SELECT crt FROM col)
+				ELSE c.odue
 			END AS odue
-		FROM cards
+		FROM cards c
+		LEFT JOIN graves g ON g.oid=c.id AND g.type=0
+		WHERE g.oid IS NULL
 		ORDER BY id
 	`)
 	return &Cards{rows}, err
