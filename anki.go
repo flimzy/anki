@@ -129,7 +129,7 @@ func (a *Apkg) Notes() (*Notes, error) {
 			CAST(n.csum AS text) AS csum -- Work-around for SQL.js trying to treat this as a float
 		FROM notes n
 		LEFT JOIN graves g ON g.oid=n.id AND g.type=1
-		ORDER BY id
+		ORDER BY id DESC
 	`)
 	return &Notes{rows}, err
 }
@@ -173,7 +173,7 @@ func (a *Apkg) Cards() (*Cards, error) {
 		FROM cards c
 		LEFT JOIN graves g ON g.oid=c.id AND g.type=0
 		WHERE g.oid IS NULL
-		ORDER BY id
+		ORDER BY id DESC
 	`)
 	return &Cards{rows}, err
 }
@@ -182,4 +182,37 @@ func (c *Cards) Card() (*Card, error) {
 	card := &Card{}
 	err := c.StructScan(card)
 	return card, err
+}
+
+type Reviews struct {
+	*sqlx.Rows
+}
+
+// Reviews returns a Reviews struct representing all of the reviews of
+// non-deleted cards in the *.apkg package file, in reverse chronological
+// order (newest first).
+func (a *Apkg) Reviews() (*Reviews, error) {
+	rows, err := a.db.Queryx(`
+		SELECT r.id, r.cid, r.usn, r.ease, r.time, r.type,
+			CAST(r.factor AS real)/1000 AS factor,
+			CASE
+				WHEN r.ivl < 0 THEN -ivl
+				ELSE r.ivl*24*60*60
+			END AS ivl,
+			CASE
+				WHEN r.lastIvl < 0 THEN -ivl
+				ELSE r.lastIvl*24*60*60
+			END AS lastIvl
+		FROM revlog r
+		LEFT JOIN graves g ON g.oid=r.cid AND g.type=0
+		WHERE g.oid IS NULL
+		ORDER BY id DESc
+	`)
+	return &Reviews{rows}, err
+}
+
+func (r *Reviews) Review() (*Review, error) {
+	review := &Review{}
+	err := r.StructScan(review)
+	return review, err
 }

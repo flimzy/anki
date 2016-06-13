@@ -63,6 +63,23 @@ func TestReadReader(t *testing.T) {
 		t.Fatalf("Error closing Notes: %s", err)
 	}
 
+	reviews, err := apkg.Reviews()
+	if err != nil {
+		t.Fatalf("Error fetching reviews: %s", err)
+	}
+	for reviews.Next() {
+		review, err := reviews.Review()
+		if err != nil {
+			t.Fatalf("Error reading review: %s", err)
+		}
+		if review.CardID != 1388721683902 {
+			t.Fatalf("review spot-check failed. Expected cid 1388721683902, got %d", review.CardID)
+		}
+	}
+	if err := reviews.Close(); err != nil {
+		t.Fatalf("Error closing Reviews: %s", err)
+	}
+
 	cards, err := apkg.Cards()
 	if err != nil {
 		t.Fatalf("Error fetching cards: %s", err)

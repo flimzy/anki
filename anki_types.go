@@ -381,3 +381,37 @@ const (
 	CardQueueUserBuried  CardQueue = -2
 	CardQueueSchedBuried CardQueue = -3
 )
+
+// Review definition
+//
+// `ivl` is stored either as negative seconds, or as positive days. We convert
+// both to positive seconds.
+type Review struct {
+	Timestamp      TimestampSeconds     `db:"id"`      // Times when the review was done
+	CardID         ID                   `db:"cid"`     // Foreign key to a Card
+	UpdateSequence int                  `db:"usn"`     // Update sequence number
+	Ease           ReviewEase           `db:"ease"`    // Button pushed to score recall: wrong, hard, ok, easy
+	Interval       DurationSeconds      `db:"ivl"`     // SRS interval in seconds
+	LastInterval   DurationSeconds      `db:"lastIvl"` // Prevoius SRS interval in seconds
+	Factor         float32              `db:"factor"`  // SRS factor
+	ReviewTime     DurationMilliseconds `db:"time"`    // Time spent on the review
+	Type           ReviewType           `db:"type"`    // Review type: learn, review, relearn, cram
+}
+
+type ReviewEase int
+
+const (
+	ReviewEaseWrong ReviewEase = 1
+	ReviewEaseHard  ReviewEase = 2
+	ReviewEaseOK    ReviewEase = 3
+	ReviewEaseEasy  ReviewEase = 4
+)
+
+type ReviewType int
+
+const (
+	ReviewTypeLearn ReviewType = iota
+	ReviewTypeReview
+	ReviewTypeRelearn
+	ReviewTypeCram
+)

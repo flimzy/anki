@@ -107,6 +107,17 @@ func scanInt64(src interface{}) (int64, error) {
 	return num, nil
 }
 
+// DurationMilliseconds represents a time.Duration value stored as
+// milliseconds.
+type DurationMilliseconds time.Duration
+
+// Scan implements the sql.Scanner interface for the DurationMilliseconds type.
+func (d *DurationMilliseconds) Scan(src interface{}) error {
+	ms, err := scanInt64(src)
+	*d = DurationMilliseconds(time.Duration(ms) * time.Millisecond)
+	return err
+}
+
 // DurationSeconds represents a time.Duration value stored as seconds.
 type DurationSeconds time.Duration
 
