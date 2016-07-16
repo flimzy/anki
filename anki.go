@@ -5,6 +5,7 @@ package anki
 
 import (
 	"archive/zip"
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -30,6 +31,11 @@ func ReadFile(f string) (*Apkg, error) {
 	}
 	a.populateIndex()
 	return a, nil
+}
+
+func ReadBytes(b []byte) (*Apkg, error) {
+	r := bytes.NewReader(b)
+	return ReadReader(r, int64(len(b)))
 }
 
 func ReadReader(r io.ReaderAt, size int64) (*Apkg, error) {
