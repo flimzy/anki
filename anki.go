@@ -29,8 +29,7 @@ func ReadFile(f string) (*Apkg, error) {
 		reader: &z.Reader,
 		closer: z,
 	}
-	a.populateIndex()
-	return a, nil
+	return a, a.open()
 }
 
 func ReadBytes(b []byte) (*Apkg, error) {
@@ -46,8 +45,26 @@ func ReadReader(r io.ReaderAt, size int64) (*Apkg, error) {
 	a := &Apkg{
 		reader: z,
 	}
+	return a, a.open()
+}
+
+func (a *Apkg) open() error {
 	a.populateIndex()
-	return a, nil
+	file, ok := a.index["collection.anki2"]
+	if !ok {
+		return errors.New("Did not find 'collection.anki2'. Invalid Anki package")
+	}
+	rc, err := file.Open()
+	if err != nil {
+		return err
+	}
+	defer rc.Close()
+	db, err := OpenDB(rc)
+	if err != nil {
+		return err
+	}
+	a.db = db
+	return nil
 }
 
 func (a *Apkg) populateIndex() {
@@ -76,22 +93,8 @@ func (a *Apkg) Close() (e error) {
 }
 
 func (a *Apkg) Collection() (*Collection, error) {
-	file, ok := a.index["collection.anki2"]
-	if !ok {
-		return nil, errors.New("Did not find 'collection.anki2'. Invalid Anki package")
-	}
-	rc, err := file.Open()
-	if err != nil {
-		return nil, err
-	}
-	defer rc.Close()
-	db, err := OpenDB(rc)
-	if err != nil {
-		return nil, err
-	}
-	a.db = db
 	var deletedDecks []ID
-	if rows, err := db.Query("SELECT oid FROM graves WHERE type=2"); err != nil {
+	if rows, err := a.db.Query("SELECT oid FROM graves WHERE type=2"); err != nil {
 		return nil, err
 	} else {
 		for rows.Next() {
@@ -103,7 +106,7 @@ func (a *Apkg) Collection() (*Collection, error) {
 		}
 	}
 	collection := &Collection{}
-	if err := db.Get(collection, "SELECT * FROM col"); err != nil {
+	if err := a.db.Get(collection, "SELECT * FROM col"); err != nil {
 		return nil, err
 	}
 	for _, deck := range collection.Decks {

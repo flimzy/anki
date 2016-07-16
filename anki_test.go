@@ -4,6 +4,7 @@
 package anki
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -102,5 +103,35 @@ func TestReadReader(t *testing.T) {
 
 	if err := apkg.Close(); err != nil {
 		t.Fatalf("Error closing apkg from Reader: %s", err)
+	}
+}
+
+func TestReadBytes(t *testing.T) {
+	file, err := os.Open(ApkgFile)
+	if err != nil {
+		t.Fatalf("Error opening test file: %s", err)
+	}
+	buf, err := ioutil.ReadAll(file)
+	if err != nil {
+		t.Fatalf("Error reading test file: %s", err)
+	}
+	apkg, err := ReadBytes(buf)
+	if err != nil {
+		t.Fatalf("Error calling ReadBytes: %s\n", err)
+	}
+	// Try counting cards
+	if cards, err := apkg.Cards(); err != nil {
+		t.Fatal("Error calling Cards(): %s", err)
+	} else {
+		var count int
+		for cards.Next() {
+			count++
+		}
+		if count != 1 {
+			t.Fatalf("Expected 1 card, found %d\n", count)
+		}
+	}
+	if err := apkg.Close(); err != nil {
+		t.Fatalf("Error closing apkg: %s", err)
 	}
 }
