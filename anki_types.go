@@ -12,19 +12,19 @@ import (
 
 // Collection is an Anki Collection, stored in the `col` table.
 type Collection struct {
-	ID             ID                    `db:"id"`     // Primary key; should always be 1, as there's only ever one collection per *.apkg file
-	Created        TimestampSeconds      `db:"crt"`    // Created timestamp (seconds)
-	Modified       TimestampMilliseconds `db:"mod"`    // Last modified timestamp (milliseconds)
-	SchemaModified TimestampMilliseconds `db:"scm"`    // Schema modification time (milliseconds)
-	Version        int                   `db:"ver"`    // Version?
-	Dirty          BoolInt               `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
-	UpdateSequence int                   `db:"usn"`    // update sequence number. used to figure out diffs when syncing
-	LastSync       TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
-	Config         Config                `db:"conf"`   // JSON blob containing configuration options
-	Models         Models                `db:"models"` // JSON array of json objects containing the models (aka Note types)
-	Decks          Decks                 `db:"decks"`  // JSON array of json objects containing decks
-	DeckConfigs    DeckConfigs           `db:"dconf"`  // JSON blob containing deck configuration options
-	Tags           string                `db:"tags"`   // a cache of tags used in the collection
+	ID             ID                     `db:"id"`     // Primary key; should always be 1, as there's only ever one collection per *.apkg file
+	Created        *TimestampSeconds      `db:"crt"`    // Created timestamp (seconds)
+	Modified       *TimestampMilliseconds `db:"mod"`    // Last modified timestamp (milliseconds)
+	SchemaModified *TimestampMilliseconds `db:"scm"`    // Schema modification time (milliseconds)
+	Version        int                    `db:"ver"`    // Version?
+	Dirty          BoolInt                `db:"dty"`    // Dirty? No longer used. See https://github.com/dae/anki/blob/master/anki/collection.py#L90
+	UpdateSequence int                    `db:"usn"`    // update sequence number. used to figure out diffs when syncing
+	LastSync       *TimestampMilliseconds `db:"ls"`     // Last sync time (milliseconds)
+	Config         Config                 `db:"conf"`   // JSON blob containing configuration options
+	Models         Models                 `db:"models"` // JSON array of json objects containing the models (aka Note types)
+	Decks          Decks                  `db:"decks"`  // JSON array of json objects containing decks
+	DeckConfigs    DeckConfigs            `db:"dconf"`  // JSON blob containing deck configuration options
+	Tags           string                 `db:"tags"`   // a cache of tags used in the collection
 	apkg           *Apkg
 }
 
@@ -101,7 +101,7 @@ type Model struct {
 	LatexPre       string            `json:"latexPre"`  // preamble for LaTeX expressions
 	LatexPost      string            `json:"latexPost"` // String added to end of LaTeX expressions (usually \\end{document})
 	CSS            string            `json:"css"`       // CSS, shared for all templates
-	Modified       TimestampSeconds  `json:"mod"`       // Modification time in seconds
+	Modified       *TimestampSeconds `json:"mod"`       // Modification time in seconds
 	RequiredFields []*CardConstraint `json:"req"`       // Array of card constraints describing which fields are required for each card to be generated
 	UpdateSequence int               `json:"usn"`       // Update sequence number: used in same way as other usn vales in db
 }
@@ -188,22 +188,22 @@ func (d *Decks) UnmarshalJSON(src []byte) error {
 
 // A Deck definition
 type Deck struct {
-	ID                      ID               `json:"id"`               // Deck ID
-	Name                    string           `json:"name"`             // Deck name
-	Description             string           `json:"desc"`             // Deck description
-	Modified                TimestampSeconds `json:"mod"`              // Last modification time in seconds
-	UpdateSequence          int              `json:"usn"`              // Update sequence number. Used in the same way as the other USN values
-	Collapsed               bool             `json:"collapsed"`        // True when the deck is collapsed
-	BrowserCollapsed        bool             `json:"browserCollapsed"` // True when the deck is collapsed in the browser
-	ExtendedNewCardLimit    int              `json:"extendedNew"`      // Extended new card limit for custom study
-	ExtendedReviewCardLimit int              `json:"extendedRev"`      // Extended review card limit for custom study
-	Dynamic                 BoolInt          `json:"dyn"`              // True for a dynamic (aka filtered) deck
-	ConfigID                ID               `json:"conf"`             // ID of option group from dconf in `col` table
-	NewToday                [2]int           `json:"newToday"`         // two number array used somehow for custom study
-	ReviewsToday            [2]int           `json:"revToday"`         // two number array used somehow for custom study
-	LearnToday              [2]int           `json:"lrnToday"`         // two number array used somehow for custom study
-	TimeToday               [2]int           `json:"timeToday"`        // two number array used somehow for custom study (in ms)
-	Config                  *DeckConfig      `json:"-"`
+	ID                      ID                `json:"id"`               // Deck ID
+	Name                    string            `json:"name"`             // Deck name
+	Description             string            `json:"desc"`             // Deck description
+	Modified                *TimestampSeconds `json:"mod"`              // Last modification time in seconds
+	UpdateSequence          int               `json:"usn"`              // Update sequence number. Used in the same way as the other USN values
+	Collapsed               bool              `json:"collapsed"`        // True when the deck is collapsed
+	BrowserCollapsed        bool              `json:"browserCollapsed"` // True when the deck is collapsed in the browser
+	ExtendedNewCardLimit    int               `json:"extendedNew"`      // Extended new card limit for custom study
+	ExtendedReviewCardLimit int               `json:"extendedRev"`      // Extended review card limit for custom study
+	Dynamic                 BoolInt           `json:"dyn"`              // True for a dynamic (aka filtered) deck
+	ConfigID                ID                `json:"conf"`             // ID of option group from dconf in `col` table
+	NewToday                [2]int            `json:"newToday"`         // two number array used somehow for custom study
+	ReviewsToday            [2]int            `json:"revToday"`         // two number array used somehow for custom study
+	LearnToday              [2]int            `json:"lrnToday"`         // two number array used somehow for custom study
+	TimeToday               [2]int            `json:"timeToday"`        // two number array used somehow for custom study (in ms)
+	Config                  *DeckConfig       `json:"-"`
 }
 
 // Collection of per-deck configurations
@@ -233,13 +233,13 @@ func (dc *DeckConfigs) UnmarshalJSON(src []byte) error {
 //
 // Excluded from this definition is the `minSpace` field from Reviews, as it is no longer used.
 type DeckConfig struct {
-	ID               ID               `json:"id"`       // Deck ID
-	Name             string           `json:"name"`     // Deck Name
-	ReplayAudio      bool             `json:"replayq"`  // When answer shown, replay both question and answer audio
-	ShowTimer        BoolInt          `json:"timer"`    // Show answer timer
-	MaxAnswerSeconds int              `json:"maxTaken"` // Ignore answers that take longer than this many seconds
-	Modified         TimestampSeconds `json:"mod"`      // Modified timestamp
-	AutoPlay         bool             `json:"autoplay"` // Automatically play audio
+	ID               ID                `json:"id"`       // Deck ID
+	Name             string            `json:"name"`     // Deck Name
+	ReplayAudio      bool              `json:"replayq"`  // When answer shown, replay both question and answer audio
+	ShowTimer        BoolInt           `json:"timer"`    // Show answer timer
+	MaxAnswerSeconds int               `json:"maxTaken"` // Ignore answers that take longer than this many seconds
+	Modified         *TimestampSeconds `json:"mod"`      // Modified timestamp
+	AutoPlay         bool              `json:"autoplay"` // Automatically play audio
 	Lapses           struct {
 		LeechFails      int               `json:"leechFails"`  // Leech threshold
 		MinimumInterval DurationDays      `json:"minInt"`      // Minimum interval in days
@@ -286,15 +286,15 @@ const (
 //
 // Excludes the `flags` and `data` columns, which are no longer used
 type Note struct {
-	ID             ID               `db:"id"`   // Primary key
-	GUID           string           `db:"guid"` // globally unique id, almost certainly used for syncing
-	ModelID        ID               `db:"mid"`  // Model ID
-	Modified       TimestampSeconds `db:"mod"`  // Last modified time
-	UpdateSequence int              `db:"usn"`  // Update sequence number (no longer used?)
-	Tags           string           `db:"tags"` // List of the note's tags
-	FieldValues    FieldValues      `db:"flds"` // Values for the note's fields
-	UniqueField    string           `db:"sfld"` // The text of the first field, used for Anki's simplistic uniqueness checking
-	Checksum       int64            `db:"csum"` // Field checksum used for duplicate check. Integer representation of first 8 digits of sha1 hash of the first field
+	ID             ID                `db:"id"`   // Primary key
+	GUID           string            `db:"guid"` // globally unique id, almost certainly used for syncing
+	ModelID        ID                `db:"mid"`  // Model ID
+	Modified       *TimestampSeconds `db:"mod"`  // Last modified time
+	UpdateSequence int               `db:"usn"`  // Update sequence number (no longer used?)
+	Tags           string            `db:"tags"` // List of the note's tags
+	FieldValues    FieldValues       `db:"flds"` // Values for the note's fields
+	UniqueField    string            `db:"sfld"` // The text of the first field, used for Anki's simplistic uniqueness checking
+	Checksum       int64             `db:"csum"` // Field checksum used for duplicate check. Integer representation of first 8 digits of sha1 hash of the first field
 }
 
 // The Tags type represents an array of tags for a note.
@@ -351,22 +351,22 @@ func (fv *FieldValues) Scan(src interface{}) error {
 // `ivl` is stored either as negative seconds, or as positive days. We convert
 // both to positive seconds.
 type Card struct {
-	ID             ID               `db:"id"`     // Primary key
-	NoteID         ID               `db:"nid"`    // Foreign Key to a Note
-	DeckID         ID               `db:"did"`    // Foreign key to a Deck
-	TemplateID     int              `db:"ord"`    // The Template ID, within the Model, to which this card corresponds.
-	Modified       TimestampSeconds `db:"mod"`    // Last modified time
-	UpdateSequence int              `db:"usn"`    // Update sequence number
-	Type           CardType         `db:"type"`   // Card type: new, learning, due
-	Queue          CardQueue        `db:"queue"`  // Queue: suspended, user buried, sched buried
-	Due            TimestampSeconds `db:"due"`    // Time when the card is next due
-	Interval       DurationSeconds  `db:"ivl"`    // SRS interval in seconds
-	Factor         float32          `db:"factor"` // SRS factor
-	ReviewCount    int              `db:"reps"`   // Number of reviews
-	Lapses         int              `db:"lapses"` // Number of times card went from "answered correctly" to "answered incorrectly" state
-	Left           int              `db:"left"`   // Reviews remaining until graduation
-	OriginalDue    TimestampSeconds `db:"odue"`   // Original due time. Only used when card is in filtered deck.
-	OriginalDeckID ID               `db:"odid"`   // Original Deck ID. Only used when card is in filtered deck.
+	ID             ID                `db:"id"`     // Primary key
+	NoteID         ID                `db:"nid"`    // Foreign Key to a Note
+	DeckID         ID                `db:"did"`    // Foreign key to a Deck
+	TemplateID     int               `db:"ord"`    // The Template ID, within the Model, to which this card corresponds.
+	Modified       *TimestampSeconds `db:"mod"`    // Last modified time
+	UpdateSequence int               `db:"usn"`    // Update sequence number
+	Type           CardType          `db:"type"`   // Card type: new, learning, due
+	Queue          CardQueue         `db:"queue"`  // Queue: suspended, user buried, sched buried
+	Due            *TimestampSeconds `db:"due"`    // Time when the card is next due
+	Interval       DurationSeconds   `db:"ivl"`    // SRS interval in seconds
+	Factor         float32           `db:"factor"` // SRS factor
+	ReviewCount    int               `db:"reps"`   // Number of reviews
+	Lapses         int               `db:"lapses"` // Number of times card went from "answered correctly" to "answered incorrectly" state
+	Left           int               `db:"left"`   // Reviews remaining until graduation
+	OriginalDue    *TimestampSeconds `db:"odue"`   // Original due time. Only used when card is in filtered deck.
+	OriginalDeckID ID                `db:"odid"`   // Original Deck ID. Only used when card is in filtered deck.
 }
 
 type CardType int
@@ -390,7 +390,7 @@ const (
 // `ivl` is stored either as negative seconds, or as positive days. We convert
 // both to positive seconds.
 type Review struct {
-	Timestamp      TimestampSeconds     `db:"id"`      // Times when the review was done
+	Timestamp      *TimestampSeconds    `db:"id"`      // Times when the review was done
 	CardID         ID                   `db:"cid"`     // Foreign key to a Card
 	UpdateSequence int                  `db:"usn"`     // Update sequence number
 	Ease           ReviewEase           `db:"ease"`    // Button pushed to score recall: wrong, hard, ok, easy

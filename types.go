@@ -65,7 +65,7 @@ func (t *TimestampSeconds) Scan(src interface{}) error {
 	default:
 		return fmt.Errorf("Incompatible type for TimestampSeconds: %s", x)
 	}
-	*t = TimestampSeconds(time.Unix(seconds, 0))
+	*t = TimestampSeconds(time.Unix(seconds, 0).UTC())
 	return nil
 }
 
@@ -93,7 +93,7 @@ func (t *TimestampMilliseconds) Scan(src interface{}) error {
 	default:
 		return errors.New("Incompatible type for TimestampMillieconds")
 	}
-	*t = TimestampMilliseconds(time.Unix(ms/1000, ms%1000))
+	*t = TimestampMilliseconds(time.Unix(ms/1000, ms%1000).UTC())
 	return nil
 }
 
