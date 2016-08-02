@@ -6,6 +6,7 @@ package anki
 import (
 	"archive/zip"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
@@ -16,7 +17,8 @@ import (
 type Apkg struct {
 	reader *zip.Reader
 	closer *zip.ReadCloser
-	index  map[string]*zip.File
+	sqlite *zip.File
+	media  *zipIndex
 	db     *DB
 }
 
@@ -49,12 +51,10 @@ func ReadReader(r io.ReaderAt, size int64) (*Apkg, error) {
 }
 
 func (a *Apkg) open() error {
-	a.populateIndex()
-	file, ok := a.index["collection.anki2"]
-	if !ok {
-		return errors.New("Did not find 'collection.anki2'. Invalid Anki package")
+	if err := a.populateIndex(); err != nil {
+		return err
 	}
-	rc, err := file.Open()
+	rc, err := a.sqlite.Open()
 	if err != nil {
 		return err
 	}
@@ -67,11 +67,59 @@ func (a *Apkg) open() error {
 	return nil
 }
 
-func (a *Apkg) populateIndex() {
-	a.index = make(map[string]*zip.File)
-	for _, file := range a.reader.File {
-		a.index[file.FileHeader.Name] = file
+type zipIndex struct {
+	index map[string]*zip.File
+}
+
+func (a *Apkg) ReadMediaFile(name string) ([]byte, error) {
+	return a.media.ReadFile(name)
+}
+
+func (zi *zipIndex) ReadFile(name string) ([]byte, error) {
+	zipFile, ok := zi.index[name]
+	if !ok {
+		return nil, errors.New("File `" + name + "` not found in zip index")
 	}
+	fh, err := zipFile.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer fh.Close()
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(fh)
+	return buf.Bytes(), nil
+}
+
+func (a *Apkg) populateIndex() error {
+	index := &zipIndex{
+		index: make(map[string]*zip.File),
+	}
+	for _, file := range a.reader.File {
+		index.index[file.FileHeader.Name] = file
+	}
+
+	if sqlite, ok := index.index["collection.anki2"]; !ok {
+		return errors.New("Unable to find `collection.anki2` in archive")
+	} else {
+		a.sqlite = sqlite
+	}
+
+	mediaFile, err := index.ReadFile("media")
+	if err != nil {
+		return err
+	}
+
+	mediaMap := make(map[string]string)
+	if err := json.Unmarshal(mediaFile, &mediaMap); err != nil {
+		return err
+	}
+	a.media = &zipIndex{
+		index: make(map[string]*zip.File),
+	}
+	for idx, filename := range mediaMap {
+		a.media.index[filename] = index.index[idx]
+	}
+	return nil
 }
 
 // Close closes any opened resources (io.Reader, SQLite handles, etc). Any
