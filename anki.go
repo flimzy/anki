@@ -217,11 +217,12 @@ func (a *Apkg) Cards() (*Cards, error) {
 		SELECT c.id, c.nid, c.did, c.ord, c.mod, c.usn, c.type, c.queue, c.reps, c.lapses, c.left, c.odid,
 			CAST(c.factor AS real)/1000 AS factor,
 			CASE c.type
-				WHEN 1 THEN 0
-				WHEN 2 THEN c.due*24*60*60*(SELECT crt FROM col)
+				WHEN 0 THEN NULL
+				WHEN 1 THEN c.due*24*60*60*(SELECT crt FROM col)
 				ELSE c.due
 			END AS due,
 			CASE
+				WHEN c.ivl == 0 THEN NULL
 				WHEN c.ivl < 0 THEN -ivl
 				ELSE c.ivl*24*60*60
 			END AS ivl,

@@ -360,7 +360,7 @@ type Card struct {
 	Type           CardType          `db:"type"`   // Card type: new, learning, due
 	Queue          CardQueue         `db:"queue"`  // Queue: suspended, user buried, sched buried
 	Due            *TimestampSeconds `db:"due"`    // Time when the card is next due
-	Interval       DurationSeconds   `db:"ivl"`    // SRS interval in seconds
+	Interval       *DurationSeconds  `db:"ivl"`    // SRS interval in seconds
 	Factor         float32           `db:"factor"` // SRS factor
 	ReviewCount    int               `db:"reps"`   // Number of reviews
 	Lapses         int               `db:"lapses"` // Number of times card went from "answered correctly" to "answered incorrectly" state
