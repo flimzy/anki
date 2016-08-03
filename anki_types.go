@@ -374,15 +374,23 @@ type CardType int
 const (
 	CardTypeNew CardType = iota
 	CardTypeLearning
-	CardTypeDue
+	CardTypeReview
 )
 
 type CardQueue int
 
+// CardQueue specifies the card's queue type
+//
+// See https://github.com/dae/anki/blob/master/anki/sched.py#L17
+// and https://github.com/dae/anki/blob/master/anki/cards.py#L14
 const (
-	CardQueueSuspended   CardQueue = -1
-	CardQueueUserBuried  CardQueue = -2
-	CardQueueSchedBuried CardQueue = -3
+	CardQueueSchedBuried CardQueue = -3 // Sched Buried (??, possibly unused)
+	CardQueueBuried      CardQueue = -2 // Buried
+	CardQueueSuspended   CardQueue = -1 // Suspended
+	CardQueueNew         CardQueue = 0  // New/Cram
+	CardQueueLearning    CardQueue = 1  // Learning
+	CardQueueReview      CardQueue = 2  // Review
+	CardQueueRelearning  CardQueue = 3  // Day Learn (Relearn?)
 )
 
 // Review definition
