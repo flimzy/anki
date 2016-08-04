@@ -218,8 +218,8 @@ func (a *Apkg) Cards() (*Cards, error) {
 			CAST(c.factor AS real)/1000 AS factor,
 			CASE c.type
 				WHEN 0 THEN NULL
-				WHEN 1 THEN c.due*24*60*60*(SELECT crt FROM col)
-				ELSE c.due
+				WHEN 1 THEN c.due
+				WHEN 2 THEN c.due*24*60*60+(SELECT crt FROM col)
 			END AS due,
 			CASE
 				WHEN c.ivl == 0 THEN NULL
@@ -227,9 +227,9 @@ func (a *Apkg) Cards() (*Cards, error) {
 				ELSE c.ivl*24*60*60
 			END AS ivl,
 			CASE c.type
-				WHEN 1 THEN 0
-				WHEN 2 THEN c.odue*24*60*60*(SELECT crt FROM col)
-				ELSE c.odue
+				WHEN 0 THEN NULL
+				WHEN 1 THEN c.odue
+				WHEN 2 THEN c.odue*24*60*60+(SELECT crt FROM col)
 			END AS odue
 		FROM cards c
 		LEFT JOIN graves g ON g.oid=c.id AND g.type=0
