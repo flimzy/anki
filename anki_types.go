@@ -106,6 +106,13 @@ type Model struct {
 	UpdateSequence int               `json:"usn"`       // Update sequence number: used in same way as other usn vales in db
 }
 
+// Returns the model's creation timestamp (based on its ID)
+func (m *Model) Created() *TimestampMilliseconds {
+	t := &TimestampMilliseconds{}
+	t.Scan(int64(m.ID))
+	return t
+}
+
 // Enum representing the available Note Type Types (confusing, eh?)
 type ModelType int
 
@@ -206,6 +213,13 @@ type Deck struct {
 	Config                  *DeckConfig       `json:"-"`
 }
 
+// Returns the deck's creation timestamp (based on its ID)
+func (d *Deck) Created() *TimestampMilliseconds {
+	t := &TimestampMilliseconds{}
+	t.Scan(int64(d.ID))
+	return t
+}
+
 // Collection of per-deck configurations
 type DeckConfigs map[ID]*DeckConfig
 
@@ -297,6 +311,13 @@ type Note struct {
 	Checksum       int64             `db:"csum"` // Field checksum used for duplicate check. Integer representation of first 8 digits of sha1 hash of the first field
 }
 
+// Returns the notes's creation timestamp (based on its ID)
+func (n *Note) Created() *TimestampMilliseconds {
+	t := &TimestampMilliseconds{}
+	t.Scan(int64(n.ID))
+	return t
+}
+
 // The Tags type represents an array of tags for a note.
 type Tags []string
 
@@ -367,6 +388,13 @@ type Card struct {
 	Left           int               `db:"left"`   // Reviews remaining until graduation
 	OriginalDue    *TimestampSeconds `db:"odue"`   // Original due time. Only used when card is in filtered deck.
 	OriginalDeckID ID                `db:"odid"`   // Original Deck ID. Only used when card is in filtered deck.
+}
+
+// Returns the cards's creation timestamp (based on its ID)
+func (c *Card) Created() *TimestampMilliseconds {
+	t := &TimestampMilliseconds{}
+	t.Scan(int64(c.ID))
+	return t
 }
 
 type CardType int
