@@ -101,6 +101,14 @@ func TestReadReader(t *testing.T) {
 		t.Fatalf("Error closing Cards: %s", err)
 	}
 
+	model, ok := collection.Models[1357356563296]
+	if !ok {
+		t.Fatalf("Cannot find model '135735656329'")
+	}
+	if model.ID != 1357356563296 {
+		t.Fatalf("Unexpected Model ID: %d", model.ID)
+	}
+
 	if err := apkg.Close(); err != nil {
 		t.Fatalf("Error closing apkg from Reader: %s", err)
 	}
