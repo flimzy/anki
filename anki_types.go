@@ -63,7 +63,7 @@ func (c *Config) Scan(src interface{}) error {
 	return scanJSON(src, c)
 }
 
-// A collection of Models (aka note types), stored as JSON in the `models`
+// Models is a collection of Models (aka note types), stored as JSON in the `models`
 // column of the `col` table.
 type Models map[ID]*Model
 
@@ -110,7 +110,9 @@ type Model struct {
 type ModelType int
 
 const (
+	// ModelTypeStandard indicates an Anki Basic note type
 	ModelTypeStandard ModelType = iota
+	// ModelTypeCloze indicates an Anki Cloze note type
 	ModelTypeCloze
 )
 

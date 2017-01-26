@@ -9,11 +9,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
 	"io"
-	// 	"github.com/davecgh/go-spew/spew"
+
+	"github.com/jmoiron/sqlx"
 )
 
+// Apkg manages state of an Anki package file during processing.
 type Apkg struct {
 	reader *zip.Reader
 	closer *zip.ReadCloser
@@ -22,6 +23,7 @@ type Apkg struct {
 	db     *DB
 }
 
+// ReadFile reads an *.apkg file, returning an Apkg struct for processing.
 func ReadFile(f string) (*Apkg, error) {
 	z, err := zip.OpenReader(f)
 	if err != nil {
@@ -34,11 +36,15 @@ func ReadFile(f string) (*Apkg, error) {
 	return a, a.open()
 }
 
+// ReadBytes reads an *.apkg file from a bytestring, returning an Apkg struct
+// for processing.
 func ReadBytes(b []byte) (*Apkg, error) {
 	r := bytes.NewReader(b)
 	return ReadReader(r, int64(len(b)))
 }
 
+// ReadReader reads an *.apkg file from an io.Reader, returning an Apkg struct
+// for processing.
 func ReadReader(r io.ReaderAt, size int64) (*Apkg, error) {
 	z, err := zip.NewReader(r, size)
 	if err != nil {
