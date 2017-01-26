@@ -146,7 +146,7 @@ func (a *Apkg) Collection() (*Collection, error) {
 		return nil, err
 	} else {
 		for rows.Next() {
-			var id *ID
+			id := new(ID)
 			if err := rows.Scan(id); err != nil {
 				return nil, err
 			}
