@@ -222,7 +222,7 @@ func (a *Apkg) Cards() (*Cards, error) {
 	rows, err := a.db.Queryx(`
 		SELECT c.id, c.nid, c.did, c.ord, c.mod, c.usn, c.type, c.queue, c.reps, c.lapses, c.left, c.odid,
 			CAST(c.factor AS real)/1000 AS factor,
-			CASE c.type
+			CASE c.queue
 				WHEN 0 THEN NULL
 				WHEN 1 THEN c.due
 				WHEN 2 THEN c.due*24*60*60+(SELECT crt FROM col)
@@ -232,7 +232,7 @@ func (a *Apkg) Cards() (*Cards, error) {
 				WHEN c.ivl < 0 THEN -ivl
 				ELSE c.ivl*24*60*60
 			END AS ivl,
-			CASE c.type
+			CASE c.queue
 				WHEN 0 THEN NULL
 				WHEN 1 THEN c.odue
 				WHEN 2 THEN c.odue*24*60*60+(SELECT crt FROM col)

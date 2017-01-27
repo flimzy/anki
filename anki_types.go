@@ -365,10 +365,10 @@ func (fv *FieldValues) Scan(src interface{}) error {
 // `Specifically
 //
 // `due` and `odue` are stored in one of three states:
-//  - For card type 0 (new), the due time is ignored. Here we convert it to 0.
-//  - For card type 1 (learning), the due time is stored as seconds since epoch.
+//  - For card queue 0 (new), the due time is ignored. Here we convert it to 0.
+//  - For card queue 1 (learning), the due time is stored as seconds since epoch.
 //    We leave this as-is.
-//  - For card type 2 (due), the due time is stored as days since the collection
+//  - For card queue 2 (due), the due time is stored as days since the collection
 //    was created. We convert this to seconds since epoch.
 //
 // `ivl` is stored either as negative seconds, or as positive days. We convert
