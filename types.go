@@ -156,18 +156,20 @@ type BoolInt bool
 // Scan implements the sql.Scanner interface for the BoolInt type.
 func (b *BoolInt) Scan(src interface{}) error {
 	var tf bool
-	switch src.(type) {
+	switch t := src.(type) {
+	case bool:
+		tf = t
 	case float64:
 		// Only 0 is false
-		tf = src.(float64) != 0
+		tf = t != 0
 	case int64:
 		// Only 0 is false
-		tf = src.(int64) != 0
+		tf = t != 0
 	case nil:
 		// Nil is false
 		tf = false
 	default:
-		return errors.New("Incompatible type for BoolInt")
+		return fmt.Errorf("Incompatible type '%T' for BoolInt", src)
 	}
 	*b = BoolInt(tf)
 	return nil
