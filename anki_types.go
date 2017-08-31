@@ -35,13 +35,13 @@ type Config struct {
 	ActiveDecks   []ID            `json:"activeDecks"` // Array of active decks(?)
 	SortType      string          `json:"sortType"`
 	TimeLimit     DurationSeconds `json:"timeLimit"`
-	SortBackwards bool            `json:"sortBackwards"`
+	SortBackwards BoolInt         `json:"sortBackwards"`
 	AddToCurrent  bool            `json:"addToCur"` // Add new cards to current deck(?)
 	CurrentDeck   ID              `json:"curDeck"`
 	NewBury       bool            `json:"newBury"`
 	NewSpread     int             `json:"newSpread"`
 	DueCounts     bool            `json:"dueCounts"`
-	CurrentModel  ID              `json:"curModel,string"`
+	CurrentModel  ID              `json:"curModel"`
 	CollapseTime  int             `json:"collapseTime"`
 }
 
