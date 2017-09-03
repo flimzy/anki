@@ -77,6 +77,15 @@ type zipIndex struct {
 	index map[string]*zip.File
 }
 
+// ListFiles returns a list of all media files in the archive.
+func (a *Apkg) ListFiles() []string {
+	filenames := make([]string, 0, len(a.media.index))
+	for filename := range a.media.index {
+		filenames = append(filenames, filename)
+	}
+	return filenames
+}
+
 func (a *Apkg) ReadMediaFile(name string) ([]byte, error) {
 	return a.media.ReadFile(name)
 }
