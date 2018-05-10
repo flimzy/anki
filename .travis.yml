@@ -11,6 +11,7 @@ before_install:
 install:
     - go get -u github.com/gopherjs/gopherjs github.com/mattn/go-sqlite3 github.com/jmoiron/sqlx
     - go get -u -d -tags=js github.com/flimzy/go-sql.js
+    - curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin v1.17.1
     # Syscall support
     - >
     ( cd $GOPATH/src/github.com/gopherjs/gopherjs/node-syscall/;
@@ -21,5 +22,6 @@ install:
 
 script:
     - diff -u <(echo -n) <(gofmt -d ./)
-    - go test github.com/flimzy/anki
+    - golangci-lint run ./...
+    - go test -race github.com/flimzy/anki
     - gopherjs test github.com/flimzy/anki
