@@ -13,7 +13,7 @@ const ApkgFile = "t/Test.apkg"
 
 func TestReadFile(t *testing.T) {
 	if _, err := ReadFile("does not exist"); err.Error() != "open does not exist: no such file or directory" {
-		t.Fatalf("Unexpected error trying to open non-existant file: %s", err)
+		t.Fatalf("Unexpected error trying to open non-existent file: %s", err)
 	}
 	apkg, err := ReadFile(ApkgFile)
 	if err != nil {
@@ -52,9 +52,9 @@ func TestReadReader(t *testing.T) {
 		t.Fatalf("Error fetching notes: %s", err)
 	}
 	for notes.Next() {
-		note, err := notes.Note()
+		note, e := notes.Note()
 		if err != nil {
-			t.Fatalf("Error reading note: %s", err)
+			t.Fatalf("Error reading note: %s", e)
 		}
 		if note.ID != 1388721680877 {
 			t.Fatalf("note spot-check failed. Expected ID 1388721680877, got %d", note.ID)
@@ -63,8 +63,8 @@ func TestReadReader(t *testing.T) {
 			t.Fatalf("note spot-check failed. Expected checksum 1090091728, got %d", note.Checksum)
 		}
 	}
-	if err := notes.Close(); err != nil {
-		t.Fatalf("Error closing Notes: %s", err)
+	if e := notes.Close(); e != nil {
+		t.Fatalf("Error closing Notes: %s", e)
 	}
 
 	reviews, err := apkg.Reviews()
@@ -72,16 +72,16 @@ func TestReadReader(t *testing.T) {
 		t.Fatalf("Error fetching reviews: %s", err)
 	}
 	for reviews.Next() {
-		review, err := reviews.Review()
-		if err != nil {
-			t.Fatalf("Error reading review: %s", err)
+		review, e := reviews.Review()
+		if e != nil {
+			t.Fatalf("Error reading review: %s", e)
 		}
 		if review.CardID != 1388721683902 {
 			t.Fatalf("review spot-check failed. Expected cid 1388721683902, got %d", review.CardID)
 		}
 	}
-	if err := reviews.Close(); err != nil {
-		t.Fatalf("Error closing Reviews: %s", err)
+	if e := reviews.Close(); e != nil {
+		t.Fatalf("Error closing Reviews: %s", e)
 	}
 
 	cards, err := apkg.Cards()

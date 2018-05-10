@@ -144,6 +144,7 @@ func (d *DurationMinutes) Scan(src interface{}) error {
 // DurationDays represents a duration in days.
 type DurationDays int
 
+// Scan implements the sql.Scanner interface for the DurationDays type.
 func (d *DurationDays) Scan(src interface{}) error {
 	days, err := scanInt64(src)
 	*d = DurationDays(int(days))

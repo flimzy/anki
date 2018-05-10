@@ -12,14 +12,16 @@ import (
 	"os"
 
 	"github.com/jmoiron/sqlx"
-	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/mattn/go-sqlite3" // The sqlite3 driver
 )
 
+// DB is a wrapper for the underlying SQLite database.
 type DB struct {
 	*sqlx.DB
 	tmpFile string
 }
 
+// Close closes the database handle.
 func (db *DB) Close() (e error) {
 	if db.tmpFile != "" {
 		if err := os.Remove(db.tmpFile); err != nil {
@@ -35,6 +37,8 @@ func (db *DB) Close() (e error) {
 	return
 }
 
+// OpenDB reads an SQLite database file on src, and returns an opened database
+// handle.
 func OpenDB(src io.Reader) (db *DB, e error) {
 	db = &DB{}
 	dbFile, err := dumpToTemp(src)

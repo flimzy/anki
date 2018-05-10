@@ -86,6 +86,7 @@ func (a *Apkg) ListFiles() []string {
 	return filenames
 }
 
+// ReadMediaFile returns the contents of the named media file.
 func (a *Apkg) ReadMediaFile(name string) ([]byte, error) {
 	return a.media.ReadFile(name)
 }
@@ -113,10 +114,9 @@ func (a *Apkg) populateIndex() error {
 		index.index[file.FileHeader.Name] = file
 	}
 
-	if sqlite, ok := index.index["collection.anki2"]; !ok {
+	var ok bool
+	if a.sqlite, ok = index.index["collection.anki2"]; !ok {
 		return errors.New("Unable to find `collection.anki2` in archive")
-	} else {
-		a.sqlite = sqlite
 	}
 
 	mediaFile, err := index.ReadFile("media")
@@ -155,18 +155,19 @@ func (a *Apkg) Close() (e error) {
 	return
 }
 
+// Collection returns the complete collection.
 func (a *Apkg) Collection() (*Collection, error) {
-	var deletedDecks []ID
-	if rows, err := a.db.Query("SELECT oid FROM graves WHERE type=2"); err != nil {
+	rows, err := a.db.Query("SELECT oid FROM graves WHERE type=2")
+	if err != nil {
 		return nil, err
-	} else {
-		for rows.Next() {
-			id := new(ID)
-			if err := rows.Scan(id); err != nil {
-				return nil, err
-			}
-			deletedDecks = append(deletedDecks, *id)
+	}
+	var deletedDecks []ID
+	for rows.Next() {
+		id := new(ID)
+		if err := rows.Scan(id); err != nil {
+			return nil, err
 		}
+		deletedDecks = append(deletedDecks, *id)
 	}
 	collection := &Collection{}
 	if err := a.db.Get(collection, "SELECT * FROM col"); err != nil {
@@ -254,12 +255,14 @@ func (a *Apkg) Cards() (*Cards, error) {
 	return &Cards{rows}, err
 }
 
+// Card returns the next card in the deck.
 func (c *Cards) Card() (*Card, error) {
 	card := &Card{}
 	err := c.StructScan(card)
 	return card, err
 }
 
+// Reviews represents the reviews log in the anki package.
 type Reviews struct {
 	*sqlx.Rows
 }
@@ -287,6 +290,7 @@ func (a *Apkg) Reviews() (*Reviews, error) {
 	return &Reviews{rows}, err
 }
 
+// Review returns the next review.
 func (r *Reviews) Review() (*Review, error) {
 	review := &Review{}
 	err := r.StructScan(review)

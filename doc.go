@@ -83,7 +83,7 @@
 // 		type            integer not null
 // 	);
 //
-// When it is obvious that a column is no longer used by Anki, it is ommitted
+// When it is obvious that a column is no longer used by Anki, it is omitted
 // from these Go data structures. When it is not obvious, it is included, but
 // typically with a comment to the effect that its use is unknown. If you know
 // of any inaccuracies or recent changes to the Anki schema, please create an

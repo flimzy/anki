@@ -105,14 +105,14 @@ type Model struct {
 	UpdateSequence int               `json:"usn"`       // Update sequence number: used in same way as other usn vales in db
 }
 
-// Returns the model's creation timestamp (based on its ID)
+// Created returns the model's creation timestamp (based on its ID)
 func (m *Model) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
 	_ = t.Scan(int64(m.ID))
 	return t
 }
 
-// Enum representing the available Note Type Types (confusing, eh?)
+// ModelType is an enum representing the available Note Type Types (confusing, eh?)
 type ModelType int
 
 const (
@@ -122,7 +122,7 @@ const (
 	ModelTypeCloze
 )
 
-// A field of a model
+// Field is the field of a model
 //
 // Excluded from this definition is the `media` field, which appears to no longer be used.
 type Field struct {
@@ -134,7 +134,7 @@ type Field struct {
 	FontSize int    `json:"size"`   // Font size
 }
 
-// A card constraint defines which fields are necessary for a particular card
+// CardConstraint defines which fields are necessary for a particular card
 // type to be generated. This is (apparently) auto-calculated whenever a note
 // is created or modified.
 type CardConstraint struct {
@@ -172,7 +172,7 @@ type Template struct {
 	DeckOverride          ID     `json:"did"`   // Deck override (null by default) (??)
 }
 
-// A collection of Decks
+// Decks is a collection of Decks
 type Decks map[ID]*Deck
 
 // Scan implements the sql.Scanner interface for the Decks type.
@@ -214,14 +214,14 @@ type Deck struct {
 	Config                  *DeckConfig       `json:"-"`
 }
 
-// Returns the deck's creation timestamp (based on its ID)
+// Created returns the deck's creation timestamp (based on its ID)
 func (d *Deck) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
 	_ = t.Scan(int64(d.ID))
 	return t
 }
 
-// Collection of per-deck configurations
+// DeckConfigs is a collection of per-deck configurations
 type DeckConfigs map[ID]*DeckConfig
 
 // Scan implements the sql.Scanner interface for the DeckConfigs type.
@@ -244,9 +244,10 @@ func (dc *DeckConfigs) UnmarshalJSON(src []byte) error {
 	return nil
 }
 
-// Per-Deck configuration options.
+// DeckConfig is a struct of per-Deck configuration options.
 //
-// Excluded from this definition is the `minSpace` field from Reviews, as it is no longer used.
+// Excluded from this definition is the `minSpace` field from Reviews, as it is
+// no longer used.
 type DeckConfig struct {
 	ID               ID                `json:"id"`       // Deck ID
 	Name             string            `json:"name"`     // Deck Name
@@ -281,19 +282,25 @@ type DeckConfig struct {
 	} `json:"new"`
 }
 
-// Enum of available leech actions
+// LeechAction is an enum of available leech actions
 type LeechAction int
 
 const (
+	// LeechActionSuspendCard indicates that leeches should be suspended.
 	LeechActionSuspendCard LeechAction = iota
-	LeechActoinTagOnly
+	// LeechActionTagOnly indicates that leeches should be tagged.
+	LeechActionTagOnly
 )
 
-// Enum of new card order options
+// NewCardOrder is an enum of new card order options
 type NewCardOrder int
 
 const (
+	// NewCardOrderOrderAdded indicates that new cards will be studied in the
+	// order they were added.
 	NewCardOrderOrderAdded NewCardOrder = iota
+	// NewCardOrderRandomOrder indicates that new cards will be studied in
+	// random order.
 	NewCardOrderRandomOrder
 )
 
@@ -312,7 +319,7 @@ type Note struct {
 	Checksum       int64             `db:"csum"` // Field checksum used for duplicate check. Integer representation of first 8 digits of sha1 hash of the first field
 }
 
-// Returns the notes's creation timestamp (based on its ID)
+// Created returns the notes's creation timestamp (based on its ID)
 func (n *Note) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
 	_ = t.Scan(int64(n.ID))
@@ -339,6 +346,7 @@ func (t *Tags) Scan(src interface{}) error {
 	return nil
 }
 
+// FieldValues is a list of field values.
 type FieldValues []string
 
 // Scan implements the sql.Scanner interface for the FieldValues type.
@@ -391,24 +399,29 @@ type Card struct {
 	OriginalDeckID ID                `db:"odid"`   // Original Deck ID. Only used when card is in filtered deck.
 }
 
-// Returns the cards's creation timestamp (based on its ID)
+// Created returns the cards's creation timestamp (based on its ID)
 func (c *Card) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
 	_ = t.Scan(int64(c.ID))
 	return t
 }
 
+// CardType is an enum for card types.
 type CardType int
 
 const (
+	// CardTypeNew indicates the card has not yet been studied.
 	CardTypeNew CardType = iota
+	// CardTypeLearning indicates the card is still being learned.
 	CardTypeLearning
+	// CardTypeReview indicates the card is mature, and only being reviewed.
 	CardTypeReview
 )
 
+// CardQueue is an enum for the available card queues.
 type CardQueue int
 
-// CardQueue specifies the card's queue type
+// The available specifies the card queues.
 //
 // See https://github.com/dae/anki/blob/master/anki/sched.py#L17
 // and https://github.com/dae/anki/blob/master/anki/cards.py#L14
@@ -438,8 +451,10 @@ type Review struct {
 	Type           ReviewType           `db:"type"`    // Review type: learn, review, relearn, cram
 }
 
+// ReviewEase is an enum for the review eases.
 type ReviewEase int
 
+// The available eases based on review answers.
 const (
 	ReviewEaseWrong ReviewEase = 1
 	ReviewEaseHard  ReviewEase = 2
@@ -447,8 +462,10 @@ const (
 	ReviewEaseEasy  ReviewEase = 4
 )
 
+// ReviewType is an enum for the review types.
 type ReviewType int
 
+// The possible review types.
 const (
 	ReviewTypeLearn ReviewType = iota
 	ReviewTypeReview
