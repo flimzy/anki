@@ -129,7 +129,7 @@ func TestReadBytes(t *testing.T) {
 	}
 	// Try counting cards
 	if cards, err := apkg.Cards(); err != nil {
-		t.Fatal("Error calling Cards(): %s", err)
+		t.Fatalf("Error calling Cards(): %s", err)
 	} else {
 		var count int
 		for cards.Next() {
