@@ -1,7 +1,7 @@
 language: go
 
 go:
-    - 1.9.x
+    - 1.10.x
 
 before_install:
     - sudo apt-get update -qq
@@ -11,7 +11,6 @@ before_install:
 install:
     - go get -u github.com/gopherjs/gopherjs github.com/mattn/go-sqlite3 github.com/jmoiron/sqlx
     - go get -u -d -tags=js github.com/flimzy/go-sql.js
-
 
 script:
     - diff -u <(echo -n) <(gofmt -d ./)
