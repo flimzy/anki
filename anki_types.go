@@ -25,7 +25,6 @@ type Collection struct {
 	Decks          Decks                  `db:"decks"`  // JSON array of json objects containing decks
 	DeckConfigs    DeckConfigs            `db:"dconf"`  // JSON blob containing deck configuration options
 	Tags           string                 `db:"tags"`   // a cache of tags used in the collection
-	apkg           *Apkg
 }
 
 // Config represents basic global configuration for the Anki client.
