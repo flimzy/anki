@@ -268,7 +268,7 @@ type DeckConfig struct {
 		Fuzz             float32      `json:"fuzz"`   // Apparently not used?
 		IntervalModifier float32      `json:"ivlFct"` // Interval modifier (fraction)
 		MaxInterval      DurationDays `json:"maxIvl"` // Maximum interval in days
-		EasyBonus        float32      `json:ease4"`   // Easy bonus
+		EasyBonus        float32      `json:"ease4"`  // Easy bonus
 		Bury             bool         `json:"bury"`   // Bury related reviews until next day
 	} `json:"rev"`
 	New struct {
