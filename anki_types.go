@@ -109,7 +109,7 @@ type Model struct {
 // Returns the model's creation timestamp (based on its ID)
 func (m *Model) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(m.ID))
+	_ = t.Scan(int64(m.ID))
 	return t
 }
 
@@ -218,7 +218,7 @@ type Deck struct {
 // Returns the deck's creation timestamp (based on its ID)
 func (d *Deck) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(d.ID))
+	_ = t.Scan(int64(d.ID))
 	return t
 }
 
@@ -316,7 +316,7 @@ type Note struct {
 // Returns the notes's creation timestamp (based on its ID)
 func (n *Note) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(n.ID))
+	_ = t.Scan(int64(n.ID))
 	return t
 }
 
@@ -395,7 +395,7 @@ type Card struct {
 // Returns the cards's creation timestamp (based on its ID)
 func (c *Card) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(c.ID))
+	_ = t.Scan(int64(c.ID))
 	return t
 }
 

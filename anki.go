@@ -101,8 +101,8 @@ func (zi *zipIndex) ReadFile(name string) ([]byte, error) {
 	}
 	defer fh.Close()
 	buf := new(bytes.Buffer)
-	buf.ReadFrom(fh)
-	return buf.Bytes(), nil
+	_, err = buf.ReadFrom(fh)
+	return buf.Bytes(), err
 }
 
 func (a *Apkg) populateIndex() error {
