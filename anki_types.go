@@ -25,7 +25,6 @@ type Collection struct {
 	Decks          Decks                  `db:"decks"`  // JSON array of json objects containing decks
 	DeckConfigs    DeckConfigs            `db:"dconf"`  // JSON blob containing deck configuration options
 	Tags           string                 `db:"tags"`   // a cache of tags used in the collection
-	apkg           *Apkg
 }
 
 // Config represents basic global configuration for the Anki client.
@@ -109,7 +108,7 @@ type Model struct {
 // Returns the model's creation timestamp (based on its ID)
 func (m *Model) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(m.ID))
+	_ = t.Scan(int64(m.ID))
 	return t
 }
 
@@ -218,7 +217,7 @@ type Deck struct {
 // Returns the deck's creation timestamp (based on its ID)
 func (d *Deck) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(d.ID))
+	_ = t.Scan(int64(d.ID))
 	return t
 }
 
@@ -268,7 +267,7 @@ type DeckConfig struct {
 		Fuzz             float32      `json:"fuzz"`   // Apparently not used?
 		IntervalModifier float32      `json:"ivlFct"` // Interval modifier (fraction)
 		MaxInterval      DurationDays `json:"maxIvl"` // Maximum interval in days
-		EasyBonus        float32      `json:ease4"`   // Easy bonus
+		EasyBonus        float32      `json:"ease4"`  // Easy bonus
 		Bury             bool         `json:"bury"`   // Bury related reviews until next day
 	} `json:"rev"`
 	New struct {
@@ -316,7 +315,7 @@ type Note struct {
 // Returns the notes's creation timestamp (based on its ID)
 func (n *Note) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(n.ID))
+	_ = t.Scan(int64(n.ID))
 	return t
 }
 
@@ -395,7 +394,7 @@ type Card struct {
 // Returns the cards's creation timestamp (based on its ID)
 func (c *Card) Created() *TimestampMilliseconds {
 	t := &TimestampMilliseconds{}
-	t.Scan(int64(c.ID))
+	_ = t.Scan(int64(c.ID))
 	return t
 }
 
