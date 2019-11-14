@@ -1,20 +1,17 @@
 language: go
 
 go:
-    - 1.10.x
+    - 1.12.x
 
-before_install:
+install:
     - sudo apt-get update -qq
     - sudo apt-get install nodejs npm
     - npm install
-
-install:
     - go get -u github.com/gopherjs/gopherjs github.com/mattn/go-sqlite3 github.com/jmoiron/sqlx
     - go get -u -d -tags=js github.com/flimzy/go-sql.js
     # Syscall support
-    - >
-    ( cd $GOPATH/src/github.com/gopherjs/gopherjs/node-syscall/;
-        npm install --global node-gyp;
+    - ( cd $GOPATH/src/github.com/gopherjs/gopherjs/node-syscall/;
+        npm install --global node-gyp source-map-support;
         node-gyp rebuild;
         mkdir -p ~/.node_libraries/;
         cp build/Release/syscall.node ~/.node_libraries/syscall.node )
